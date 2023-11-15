@@ -9,10 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OperationDto {
-    
-    @NotBlank(message = "Type is mandatory")
-    private String type;
-
 
     @NotBlank(message = "Recipient is mandatory")
     private String recipientRib;

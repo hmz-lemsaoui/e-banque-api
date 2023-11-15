@@ -8,6 +8,7 @@ import com.example.theproject.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -26,6 +27,11 @@ public class OperationService {
     public Operation sendMoney(int senderId, String rib, double amount) {
 
         UserEntity sender = userRepo.findById(senderId).get();
+
+        if (sender.getSolde() < amount) {
+            throw new RuntimeException("Insufficient funds");
+        }
+
         UserEntity recipient = userRepo.findByRib(rib).get();
 
         sender.setSolde(sender.getSolde() - amount);
@@ -39,6 +45,7 @@ public class OperationService {
         operation.setSender(sender);
         operation.setRecipient(recipient);
         operation.setMontant(amount);
+        operation.setDate(String.valueOf(new Date()));
         operationRepo.save(operation);
         return operation;
     }

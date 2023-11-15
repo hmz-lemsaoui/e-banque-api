@@ -9,6 +9,7 @@ import com.example.theproject.models.Role;
 import com.example.theproject.models.UserEntity;
 import com.example.theproject.repository.RoleRepo;
 import com.example.theproject.repository.UserRepo;
+import com.example.theproject.services.AuthService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,54 +29,29 @@ import java.util.List;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private AuthenticationManager authenticationManager;
-    private UserRepo userRepo;
-    private RoleRepo roleRepo;
-    private PasswordEncoder passwordEncoder;
-    private TokenGenerator tokenGenerator;
 
+    private AuthService authService;
 
-    @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserRepo userRepo, RoleRepo roleRepo, PasswordEncoder passwordEncoder, TokenGenerator tokenGenerator) {
-        this.authenticationManager = authenticationManager;
-        this.userRepo = userRepo;
-        this.roleRepo = roleRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenGenerator = tokenGenerator;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("register")
     @Transactional
-    public ResponseEntity<String> register(@RequestBody @Valid RegisterDto registerDto) {
-        if (userRepo.existsByEmail(registerDto.getEmail())) {
-            return new ResponseEntity<>("username already taken", HttpStatus.BAD_REQUEST);
+    public ResponseEntity register(@RequestBody @Valid RegisterDto registerDto) {
+        try {
+            UserEntity user = authService.register(registerDto);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new CustomErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
-        UserEntity user = new UserEntity();
-        user.setEmail(registerDto.getEmail());
-        user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-        List roles = new ArrayList();
-        Role role = roleRepo.findByName("USER").get();
-        roles.add(role);
-        user.setRoles(roles);
-        userRepo.save(user);
-        return new ResponseEntity<>("user created", HttpStatus.CREATED);
+
     }
 
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginDto loginDto) {
-
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginDto.getEmail(),
-                            loginDto.getPassword()
-                    ));
-
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = tokenGenerator.generateToken(userDetails);
-            UserEntity user = userRepo.findByEmail(loginDto.getEmail()).get();
-            AuthresponseDto authresponseDto = new AuthresponseDto(token, user);
-            return ResponseEntity.ok(authresponseDto);
+            return ResponseEntity.ok(authService.login(loginDto));
         } catch (Exception e) {
             return new ResponseEntity<>(new CustomErrorResponse("invalid credentials"), HttpStatus.UNAUTHORIZED);
         }
