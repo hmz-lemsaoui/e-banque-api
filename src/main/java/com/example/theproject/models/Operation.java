@@ -1,6 +1,7 @@
 package com.example.theproject.models;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,10 +23,12 @@ public class Operation {
 
     @ManyToOne
     @JoinColumn(name="sender_id")
+    @JsonBackReference
     private UserEntity sender;
 
     @ManyToOne
     @JoinColumn(name="recipient_id")
+    @JsonBackReference
     private UserEntity recipient;
 
 

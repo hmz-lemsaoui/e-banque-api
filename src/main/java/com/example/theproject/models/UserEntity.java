@@ -24,7 +24,7 @@ public class UserEntity {
     private String email;
     private String fullName;
     private String rib;
-    boolean isActivated;
+    private boolean isActivated;
 
     @JsonIgnore
     private String password;

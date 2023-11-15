@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,13 @@ import org.springframework.web.bind.annotation.*;
 public class OperationsController {
 
     private OperationService operationService;
+    private UserService userService;
 
-    public OperationsController(OperationService operationService) {
+    public OperationsController(OperationService operationService
+            , UserService userService
+    ) {
         this.operationService = operationService;
+        this.userService = userService;
     }
 
     @PreAuthorize("hasAuthority('user')")
@@ -31,16 +36,23 @@ public class OperationsController {
 
         try {
 
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            UserEntity currentuser = (UserEntity) authentication.getPrincipal();
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+
+            UserEntity currentUser = userService.findByEmail(email);
 
             return ResponseEntity.ok(
-                    operationService.sendMoney(currentuser.getId(),
+                    operationService.sendMoney(
+                            currentUser.getId(),
                             operationDto.getRecipientRib(),
-                            operationDto.getMontant()));
+                            operationDto.getMontant()
+                    )
+            );
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new CustomErrorResponse("Operation could not be created"));
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

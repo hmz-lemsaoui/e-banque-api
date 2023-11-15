@@ -1,6 +1,7 @@
 package com.example.theproject.controllers;
 
 import com.example.theproject.dto.CustomErrorResponse;
+import com.example.theproject.dto.UserDto;
 import com.example.theproject.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,12 +33,15 @@ public class UsersController {
 
 
     @PreAuthorize("hasAuthority('admin')")
-    @PutMapping("/switch/{id}")
-    public ResponseEntity UserActivation(@PathVariable int id) {
+    @PutMapping("{id}")
+    public ResponseEntity updateUser(@RequestBody UserDto userDto, @PathVariable int id) {
+        if (userDto.getId() != id) {
+            return ResponseEntity.badRequest().body(new CustomErrorResponse("User id does not match"));
+        }
         try {
-            return ResponseEntity.ok(userService.switchUserActivation(id));
+            return ResponseEntity.ok(userService.updateUser(userDto));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new CustomErrorResponse("User could not be activated"));
+            return ResponseEntity.badRequest().body(new CustomErrorResponse("User could not be updated"));
         }
     }
 

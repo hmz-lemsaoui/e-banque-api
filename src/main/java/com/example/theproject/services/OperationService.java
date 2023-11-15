@@ -27,12 +27,15 @@ public class OperationService {
     public Operation sendMoney(int senderId, String rib, double amount) {
 
         UserEntity sender = userRepo.findById(senderId).get();
+        UserEntity recipient = userRepo.findByRib(rib).get();
 
-        if (sender.getSolde() < amount) {
-            throw new RuntimeException("Insufficient funds");
+        if (sender.isActivated() == false || recipient.isActivated() == false){
+            throw new RuntimeException("Account not activated");
         }
 
-        UserEntity recipient = userRepo.findByRib(rib).get();
+        if (sender.getSolde() < amount ){
+            throw new RuntimeException("Insufficient funds");
+        }
 
         sender.setSolde(sender.getSolde() - amount);
 
